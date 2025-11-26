@@ -4,6 +4,7 @@ import com.fran.practice.common.ConsoleRunner;
 import com.fran.practice.common.Exercise;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class E10_HoffIt implements Exercise {
   @Override
@@ -32,135 +33,119 @@ public class E10_HoffIt implements Exercise {
 
     int result = solve(example);
     System.out.println("Resultado del ejemplo = " + result + " (esperado: 36)");
+
+    // from file
+/*    try {
+      List<String> inputLines = Files.readAllLines(Path.of("input.txt"));
+      int resultFromFile = solve(inputLines);
+      System.out.println("Result from file: " + resultFromFile);
+    } catch (IOException e){
+      System.err.println("Can't read input.txt: " + e.getMessage());
+    }*/
   }
 
-  public static int solve(List<String> lines) {
+  // main method: from map as a textlines to sum of all trailheads
+  public static int solve(List<String> mapLines) {
 
-    int[][] map = parseMap(lines);
-    int rows = map.length;
-    int cols = map[0].length;
+    int[][] heightMap = parseHeightMap(mapLines);
 
-    int totalScore = 0;
+    int rowCount = heightMap.length;
+    int columnCount = heightMap[0].length;
 
-    for (int r = 0; r < rows; r++){
-      for (int c = 0; c < cols; c++){
-        if (map[r][c] == 0){
-          totalScore += scoreTrailhead(map, r, c);
-        }
-      }
-    }
-
-    return totalScore;
+    return IntStream.range(0, rowCount)
+      .boxed()
+      .flatMap(rowIndex -> IntStream.range(0, columnCount)
+        .filter(columnIndex -> heightMap[rowIndex][columnIndex] == 0)
+        .mapToObj(columnIndex -> computeTrailheadScore(heightMap, rowIndex, columnIndex)))
+      .mapToInt(Integer::intValue)
+      .sum();
   }
 
-  private static int[][] parseMap(List<String> lines) {
-    int rows = lines.size();
-    int cols = lines.get(0).length();
-    int[][] map = new int[rows][cols];
+  // turns each line into a num file
+  private static int[][] parseHeightMap(List<String> mapLines) {
+    int rowCount = mapLines.size();
+    int columnCount = mapLines.get(0).length();
 
-    for (int r = 0; r < rows; r++) {
-      String line = lines.get(r);
-      for (int c = 0; c < cols; c++) {
-        char ch = line.charAt(c);
-        if (ch == '.') {
-          map[r][c] = -1; // casilla impasable
+    int[][] heightMap = new int[rowCount][columnCount];
+
+    for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+      String line = mapLines.get(rowIndex);
+      for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+        char cellChar = line.charAt(columnIndex);
+        if (cellChar == '.') {
+          heightMap[rowIndex][columnIndex] = -1; // just in case
         } else {
-          map[r][c] = ch - '0';
+          // turns '0'..'9' --> 0..9
+          heightMap[rowIndex][columnIndex] = cellChar - '0';
         }
       }
     }
 
-    return map;
+    return heightMap;
   }
 
-  /**
-   * Calcula la puntuación de un trailhead concreto (celda con altura 0):
-   * número de posiciones distintas con altura 9 alcanzables desde él
-   * subiendo siempre de +1 en +1.
-   */
-  private static int scoreTrailhead(int[][] map, int startR, int startC) {
-    int rows = map.length;
-    int cols = map[0].length;
+  // the score will be the num of diff rows with height 9, achievable 1 by 1
+  private static int computeTrailheadScore(int[][] heightMap,
+                                           int startRow,
+                                           int startColumn) {
 
-    // reachable9[r][c] = true si ese 9 es alcanzable desde este trailhead
-    boolean[][] reachable9 = new boolean[rows][cols];
+    int rowCount = heightMap.length;
+    int columnCount = heightMap[0].length;
 
-    dfs(map, startR, startC, 0, reachable9);
+    // reachableNines[row][column] will be true if that 9 is achievable
+    // desde este trailhead siguiendo las reglas del ejercicio.
+    boolean[][] reachableNines = new boolean[rowCount][columnCount];
 
+    // deep search
+    exploreTrail(heightMap, startRow, startColumn, 0, reachableNines);
+
+    // count diff 9s achievable
     int score = 0;
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < cols; c++) {
-        if (reachable9[r][c]) {
+    for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+      for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+        if (reachableNines[rowIndex][columnIndex]) {
           score++;
         }
       }
     }
+
     return score;
   }
 
-  /**
-   * DFS que sigue caminos que aumentan exactamente en 1 la altura.
-   *
-   * @param expectedHeight altura que esperamos en esta celda (0..9)
-   */
-  private static void dfs(int[][] map, int r, int c, int expectedHeight, boolean[][] reachable9) {
-    int rows = map.length;
-    int cols = map[0].length;
+  private static void exploreTrail(int[][] heightMap,
+                                   int row,
+                                   int column,
+                                   int expectedHeight,
+                                   boolean[][] reachableNines) {
 
-    // Fuera de límites
-    if (r < 0 || r >= rows || c < 0 || c >= cols) {
+    int rowCount = heightMap.length;
+    int columnCount = heightMap[0].length;
+
+    // check limits
+    if (row < 0 || row >= rowCount || column < 0 || column >= columnCount) {
       return;
     }
 
-    // Casilla impasable o altura distinta a la esperada
-    if (map[r][c] != expectedHeight) {
+    // check height
+    if (heightMap[row][column] != expectedHeight) {
       return;
     }
 
-    // Si llegamos a un 9, lo marcamos y no seguimos más desde aquí
     if (expectedHeight == 9) {
-      reachable9[r][c] = true;
+      reachableNines[row][column] = true;
       return;
     }
 
-    int nextHeight = expectedHeight + 1;
+    int nextExpectedHeight = expectedHeight + 1;
 
-    // Arriba
-    dfs(map, r - 1, c, nextHeight, reachable9);
-    // Abajo
-    dfs(map, r + 1, c, nextHeight, reachable9);
-    // Izquierda
-    dfs(map, r, c - 1, nextHeight, reachable9);
-    // Derecha
-    dfs(map, r, c + 1, nextHeight, reachable9);
+    exploreTrail(heightMap, row - 1, column, nextExpectedHeight, reachableNines); // up
+    exploreTrail(heightMap, row + 1, column, nextExpectedHeight, reachableNines); // down
+    exploreTrail(heightMap, row, column - 1, nextExpectedHeight, reachableNines); // left
+    exploreTrail(heightMap, row, column + 1, nextExpectedHeight, reachableNines); // right
   }
 
-  /**
-   * Main para integrarlo con tu ConsoleRunner.
-   */
   public static void main(String[] args) {
     ConsoleRunner.register(new E10_HoffIt());
     ConsoleRunner.main(new String[]{"E10"});
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
