@@ -35,7 +35,11 @@ public class E02_RedNosedReports implements Exercise {
     );
 
     long exampleSafe = countSafeReports(exampleLines);
-    System.out.println("Example safe reports = " + exampleSafe + " (esperado: 2)");
+    long exampleSafePart2 = countSafeReportsWithDampener(exampleLines);
+
+    System.out.println("Example safe reports = " + exampleSafe + " (waited: 2)");
+    System.out.println("Part 2 (Dampener)  -> " + exampleSafePart2 + " (waited: 4)");
+
     System.out.println();
 
     Path inputPath = Path.of("inputs/day02.txt");
@@ -43,17 +47,21 @@ public class E02_RedNosedReports implements Exercise {
     if (Files.exists(inputPath)) {
       try {
         List<String> inputLines = Files.readAllLines(inputPath);
-        long safeReports = countSafeReports(inputLines);
 
-        System.out.println("== Resultados para tu input ==");
-        System.out.println("Informes totales : " + inputLines.size());
-        System.out.println("Informes seguros  : " + safeReports);
+        long safeReports = countSafeReports(inputLines);
+        long safePart2 = countSafeReportsWithDampener(inputLines);
+
+        System.out.println("== Input results ==");
+        System.out.println("Total reports : " + inputLines.size());
+        System.out.println("Secure reports  : " + safeReports);
+        System.out.println("Part 2 - Secure reports++  : " + safePart2);
+
 
       } catch (IOException e) {
         System.out.println("Error reading file: " + e.getMessage());
       }
     } else {
-      System.out.println("No se ha encontrado el fichero inputs/day02.txt.");
+      System.out.println("The file could not be found inputs/day02.txt.");
     }
   }
 
@@ -129,6 +137,48 @@ public class E02_RedNosedReports implements Exercise {
 
     // if all the rules are green
     return true;
+  }
+
+  /* ================ PART TWO ================ */
+
+  public static boolean isReportSafeWithDampener(List<Integer> levels) {
+
+    if (isReportSafe(levels)){
+      return true;
+    }
+
+    for (int i = 0; i < levels.size(); i++) {
+      List<Integer> reduced = new ArrayList<>(levels.size() - 1);
+
+      for (int j = 0; j < levels.size(); j++) {
+        if (j == i) {
+          // pass the item
+          continue;
+        }
+        reduced.add(levels.get(j));
+      }
+
+      if (isReportSafe(reduced)) {
+        return true; // true deleting i element
+      }
+    }
+    // keep insecure
+    return false;
+  }
+
+  public static long countSafeReportsWithDampener(List<String> lines) {
+    long safeCount = 0;
+
+    for (String rawLine : lines) {
+      List<Integer> levels = parseLevels(rawLine);
+      if (levels.isEmpty()) {
+        continue;
+      }
+      if (isReportSafeWithDampener(levels)) {
+        safeCount++;
+      }
+    }
+    return safeCount;
   }
 
   private enum Trend {
