@@ -51,10 +51,7 @@ public class E01_HistorianHysteria implements Exercise {
       }
     } else {
       System.out.println();
-      System.out.println("No se ha encontrado el fichero inputs/day01.txt.");
-      System.out.println("Crea ese fichero y pega dentro tu input (las dos columnas de números)");
-      System.out.println("para que el ejercicio calcule el resultado real.");
-
+      System.out.println("The file could not be found inputs/day01.txt.");
     }
   }
 
