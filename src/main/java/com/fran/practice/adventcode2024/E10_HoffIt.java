@@ -9,7 +9,7 @@ import java.util.stream.IntStream;
 public class E10_HoffIt implements Exercise {
   @Override
   public String id() {
-    return "E10";
+    return "AOC24-E10";
   }
 
   @Override
@@ -146,6 +146,6 @@ public class E10_HoffIt implements Exercise {
 
   public static void main(String[] args) {
     ConsoleRunner.register(new E10_HoffIt());
-    ConsoleRunner.main(new String[]{"E10"});
+    ConsoleRunner.main(new String[]{"AOC24-E10"});
   }
 }
