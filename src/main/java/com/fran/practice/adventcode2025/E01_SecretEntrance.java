@@ -9,6 +9,11 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class E01_SecretEntrance implements Exercise {
+
+  private static final char LEFT_ROTATION = 'L'; // can be right too
+  private static final int DIAL_SIZE = 100;
+  private static final int START_POSITION = 50;
+
   @Override
   public String id() {
     return "AOC25-01";
@@ -27,12 +32,54 @@ public class E01_SecretEntrance implements Exercise {
     Path inputPath = Path.of("inputs/day01-2025.txt");
     try {
       List<String> lines = Files.readAllLines(inputPath);
-      //int password = computePassword(lines);
-      //System.out.println("Password = " + password);
-      System.out.println(lines);
+      int password = computePassword(lines);
+      int passwordSecondPart = computePasswordWithClick(lines);
+      System.out.println("Password = " + password);
+      System.out.println("Password part two: " + passwordSecondPart);
     } catch (IOException e) {
       System.out.println("Error reading file: " + e.getMessage());
     }
+  }
+
+  static int computePasswordWithClick(List<String> lines) {
+    int position = START_POSITION;
+    int zeroCount = 0;
+
+    for (String rawData : lines) {
+      String line = rawData.trim();
+      if (line.isEmpty()) continue;
+
+      char direction = line.charAt(0);
+      int steps = Integer.parseInt(line.substring(1));
+
+      for (int i = 0; i < steps; i++) {
+        position = rotate(position, direction, 1);
+        if (position == 0) zeroCount++;
+      }
+    }
+    return zeroCount;
+  }
+
+  static int computePassword(List<String> lines) {
+    int position = START_POSITION;
+    int zeroCount = 0;
+
+    for (String rawData : lines) {
+      String line = rawData.trim();
+      if (line.isEmpty()) continue;
+
+      char direction = line.charAt(0);
+      int steps = Integer.parseInt(line.substring(1));
+
+      position = rotate(position, direction, steps);
+      if (position == 0) zeroCount++;
+    }
+    return zeroCount;
+  }
+
+  static int rotate(int current, char dir, int steps) {
+    int delta = (dir == LEFT_ROTATION) ? -steps : steps;
+    return Math.floorMod(current + delta, DIAL_SIZE);
   }
 
   static void testExample() {
@@ -53,11 +100,6 @@ public class E01_SecretEntrance implements Exercise {
       }
     }
     System.out.println("Total times at 0 (example) = " + zeroCount);
-  }
-
-  static int rotate(int current, char dir, int steps) {
-    int delta = (dir == 'L') ? -steps : steps;
-    return Math.floorMod(current + delta, 100);
   }
 
   public static void main(String[] args) {
