@@ -3,6 +3,9 @@ package com.fran.practice.adventcode2025;
 import com.fran.practice.common.ConsoleRunner;
 import com.fran.practice.common.Exercise;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 public class E01_SecretEntrance implements Exercise {
@@ -19,22 +22,21 @@ public class E01_SecretEntrance implements Exercise {
   @Override
   public void run() {
 
-    testExample();
+    //testExample();
+
+    Path inputPath = Path.of("inputs/day01-2025.txt");
+    try {
+      List<String> lines = Files.readAllLines(inputPath);
+      //int password = computePassword(lines);
+      //System.out.println("Password = " + password);
+      System.out.println(lines);
+    } catch (IOException e) {
+      System.out.println("Error reading file: " + e.getMessage());
+    }
   }
 
   static void testExample() {
-    List<String> example = List.of(
-      "L68",
-      "L30",
-      "R48",
-      "L5",
-      "R60",
-      "L55",
-      "L1",
-      "L99",
-      "R14",
-      "L82"
-    );
+    List<String> example = List.of("L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82");
 
     int position = 50;
     int zeroCount = 0;
@@ -51,7 +53,6 @@ public class E01_SecretEntrance implements Exercise {
       }
     }
     System.out.println("Total times at 0 (example) = " + zeroCount);
-
   }
 
   static int rotate(int current, char dir, int steps) {
