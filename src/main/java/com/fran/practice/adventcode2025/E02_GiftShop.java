@@ -40,13 +40,14 @@ public class E02_GiftShop implements Exercise {
   static long sumInvalidIdsInInput(String rawInput) {
 
     long totalSum = 0L;
-    String[] partsInput = rawInput.split(COMMA_SPLIT);
+    String[] rawRanges = rawInput.split(COMMA_SPLIT);
 
-    for (String range : partsInput) {
+    for (String range : rawRanges) {
       range = range.trim();
-      String[] bounds = range.split(HYPHEN_SPLIT);
-      long startBound = Long.parseLong(bounds[0]);
-      long endBound = Long.parseLong(bounds[1]);
+      // separate each range
+      String[] rangeBounds = range.split(HYPHEN_SPLIT);
+      long startBound = Long.parseLong(rangeBounds[0]);
+      long endBound = Long.parseLong(rangeBounds[1]);
 
       for (long id = startBound; id <= endBound; id++) {
         if (isInvalidId(id)) {
@@ -58,22 +59,38 @@ public class E02_GiftShop implements Exercise {
   }
 
   static boolean isInvalidId(long id) {
+
+    // cast the id into a string
     String input = Long.toString(id);
+    int digitsCount = input.length();
 
-    if (input.length() % 2 != 0) {
-      return false;
+    // from 1 to half lenght
+    for (int patternLength = 1; patternLength <= digitsCount/2;patternLength++ ) {
+      // discard if the lenght is not a mult of the pattern
+      if (digitsCount % patternLength != 0) {
+        continue;
+      }
+
+      // candidate pattern
+      String pattern = input.substring(0, patternLength);
+      boolean allMatch = true;
+
+      // check each consecutive segment with same size
+      for (int position = patternLength; position < digitsCount; position += patternLength) {
+        // check if the substr matches with the pattern
+        if (!input.startsWith(pattern, position)) {
+          allMatch = false;
+          break;
+        }
+      }
+
+      if (allMatch) {
+        // debug
+        System.out.println("Invalid: " + id + " (pattern = " + pattern + ")");
+        return true; // invalid
+      }
     }
-
-    int half = input.length() / 2;
-    String left = input.substring(0, half);
-    String right = input.substring(half);
-
-    // just for debug purposes
-    if (left.equals(right)) {
-      System.out.println("Invalid: " + id + " (" + left + " + " + right + ")");
-    }
-
-    return left.equals(right);
+    return false;
   }
 
   public static void main(String[] args) {
