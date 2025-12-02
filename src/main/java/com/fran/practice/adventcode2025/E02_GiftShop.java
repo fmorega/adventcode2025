@@ -3,7 +3,16 @@ package com.fran.practice.adventcode2025;
 import com.fran.practice.common.ConsoleRunner;
 import com.fran.practice.common.Exercise;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public class E02_GiftShop implements Exercise {
+
+  private static final String HYPHEN_SPLIT = "-";
+  private static final String COMMA_SPLIT = ",";
+  private static final String INPUT_DAY_TWO = "inputs/day02-2025.txt";
+
   @Override
   public String id() {
     return "AOC25-02";
@@ -16,30 +25,36 @@ public class E02_GiftShop implements Exercise {
 
   @Override
   public void run() {
-    String example = """
-      11-22,95-115,998-1012,1188511880-1188511890,222220-222224,
-      1698522-1698528,446443-446449,38593856-38593862,565653-565659,
-      824824821-824824827,2121212118-2121212124""";
 
-    String[] exampleParts = example.split(",");
-    long sum = 0;
+    Path inputPath = Path.of(INPUT_DAY_TWO);
+    try {
+      String rawInput = Files.readString(inputPath);
+      long totalSum = sumInvalidIdsInInput(rawInput);
+      System.out.println("Total sums: " + totalSum);
 
-    for (String range : exampleParts) {
+    } catch (IOException e) {
+      System.out.println("Error reading file: " + e.getMessage());
+    }
+  }
+
+  static long sumInvalidIdsInInput(String rawInput) {
+
+    long totalSum = 0L;
+    String[] partsInput = rawInput.split(COMMA_SPLIT);
+
+    for (String range : partsInput) {
       range = range.trim();
-      String[] bounds = range.split("-");
-      long startExample = Long.parseLong(bounds[0]);
-      long endExample = Long.parseLong(bounds[1]);
+      String[] bounds = range.split(HYPHEN_SPLIT);
+      long startBound = Long.parseLong(bounds[0]);
+      long endBound = Long.parseLong(bounds[1]);
 
-      //System.out.println("Range: " + startExample + " - " + endExample);
-
-      for (long id = startExample; id <= endExample; id++) {
+      for (long id = startBound; id <= endBound; id++) {
         if (isInvalidId(id)) {
-          sum += id;
+          totalSum += id;
         }
       }
     }
-    //System.out.println(Arrays.toString(exampleParts));
-    System.out.println("Total sums : " + sum);
+    return totalSum;
   }
 
   static boolean isInvalidId(long id) {
@@ -53,6 +68,7 @@ public class E02_GiftShop implements Exercise {
     String left = input.substring(0, half);
     String right = input.substring(half);
 
+    // just for debug purposes
     if (left.equals(right)) {
       System.out.println("Invalid: " + id + " (" + left + " + " + right + ")");
     }
