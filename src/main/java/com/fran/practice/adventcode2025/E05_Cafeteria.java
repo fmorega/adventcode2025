@@ -6,6 +6,8 @@ import com.fran.practice.common.Exercise;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class E05_Cafeteria implements Exercise {
@@ -31,10 +33,12 @@ public class E05_Cafeteria implements Exercise {
     try {
       String rawInput = Files.readString(inputPath);
 
-      ParsedDatabase db = parseDatabase(rawInput);
-      long freshCount = solvePart1(db.ranges(), db.ingredientsIds());
+      ParsedDatabase parsedInputs = parseDatabase(rawInput);
+      long freshCount = solvePart1(parsedInputs.ranges(), parsedInputs.ingredientsIds());
+      long freshCountPart2 = solvePart2(parsedInputs.ranges);
 
       System.out.println("Part 1 - Fresh ingredients: " + freshCount);
+      System.out.println("Part 2 - Total fresh IDs: " + freshCountPart2);
 
     } catch (IOException e) {
       System.out.println("Error reading file: " + e.getMessage());
@@ -48,11 +52,55 @@ public class E05_Cafeteria implements Exercise {
 
     for (long id : ingredientsIds) {
       if (isFresh(id, ranges)) {
-        freshCount++;
+        freshCount++; // if is inside a valid ranges
       }
     }
 
     return freshCount;
+  }
+
+  static long solvePart2(List<Range> ranges) {
+    List<Range> merged = mergeRanges(ranges); //first merge overlapping or adjacent
+
+    long totalFreshIds = 0L;
+
+    for (Range range : merged) {
+      long length = range.end() - range.start() + 1;
+      totalFreshIds += length; // add computed inclusive length
+    }
+
+    return totalFreshIds;
+  }
+
+  static List<Range> mergeRanges(List<Range> ranges) {
+    if (ranges.isEmpty()) {
+      return List.of();
+    }
+
+    List<Range> sorted = new ArrayList<>(ranges);
+    sorted.sort(Comparator
+      .comparingLong(Range::start)
+      .thenComparingLong(Range::end));
+
+    List<Range> merged = new ArrayList<>(); // not overlap
+
+    Range current = sorted.get(0);
+
+    for (int i = 1; i < sorted.size(); i++) {
+      Range next = sorted.get(i); // next range to consider
+
+      if (next.start() > current.end() + 1) {
+        merged.add(current); // if next is after current
+        current = next;
+      } else {
+
+        long newEnd = Math.max(current.end(), next.end()); // max from both
+        current = new Range(current.start(), newEnd);
+      }
+    }
+
+    merged.add(current);
+    return merged;
   }
 
   static boolean isFresh(long id, List<Range> ranges) {
